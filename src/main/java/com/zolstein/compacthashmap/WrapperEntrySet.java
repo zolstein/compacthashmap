@@ -1,7 +1,5 @@
 package com.zolstein.compacthashmap;
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,7 +51,6 @@ public class WrapperEntrySet<K, V> implements Set<Map.Entry<K, V>> {
     }
 
     @Override
-    @NotNull
     public <T> T[] toArray(T[] a) {
         Object[] array = new Object[backingMap.size()];
         Iterator<CompactHashMap.Entry<K, V>> iter = this.iterator();

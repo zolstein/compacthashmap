@@ -1,7 +1,5 @@
 package com.zolstein.compacthashmap;
 
-import com.sun.istack.internal.NotNull;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

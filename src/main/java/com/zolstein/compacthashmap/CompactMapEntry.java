@@ -1,7 +1,5 @@
 package com.zolstein.compacthashmap;
 
-import sun.tools.jconsole.inspector.XObject;
-
 import java.util.Map;
 import java.util.Objects;
 
