@@ -1,0 +1,10 @@
+#!/bin/bash
+
+vm1="-XX:+UnlockDiagnosticVMOptions"
+vm2="-XX:+DebugNonSafepoints"
+
+java $vm1 $vm2 -jar target/compact-hash-map-1.0-SNAPSHOT.jar &
+pid=$(jps | grep jar | cut -d' ' -f 1);
+echo "$@"
+async-profiler $@ $pid
+
