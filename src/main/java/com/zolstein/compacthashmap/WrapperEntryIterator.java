@@ -34,7 +34,7 @@ class WrapperEntryIterator<K, V> implements Iterator<Map.Entry<K, V>> {
     if (!hasNext()) {
       throw new NoSuchElementException();
     }
-    Map.Entry<K, V> ret = backingMap.entries.get(nextIndex++);
+    Map.Entry<K, V> ret = new CompactMapEntry<>(backingMap, nextIndex++);
     canRemove = true;
     return ret;
   }

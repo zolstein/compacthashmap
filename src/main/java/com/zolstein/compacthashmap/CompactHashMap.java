@@ -1,6 +1,5 @@
 package com.zolstein.compacthashmap;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -30,7 +29,10 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   private KeySize indexKeySize;
   private int used;
   private int filled;
-  ArrayList<CompactMapEntry<K, V>> entries;
+  // ArrayList<CompactMapEntry<K, V>> entries;
+  int[] hashes;
+  K[] keys;
+  V[] values;
   long version = 0;
 
   private static final int PERTURB_SHIFT = 5;
@@ -40,8 +42,35 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   private static final int SHORT_LIMIT = Short.MAX_VALUE;
 
   public CompactHashMap() {
-    entries = new ArrayList<>();
+    //entries = new ArrayList<>();
+    hashes = new int[8];
+    keys = (K[]) new Object[8];
+    values = (V[]) new Object[8];
     clear();
+  }
+
+  private void initArrays(int size) {
+    hashes = new int[size];
+    keys = (K[]) new Object[size];
+    values = (V[]) new Object[size];
+  }
+
+  private void resizeArrays(int size) {
+    int[] newHashes = new int[size];
+    System.arraycopy(hashes, 0, newHashes, 0, used);
+    hashes = newHashes;
+    K[] newKeys = (K[]) new Object[size];
+    System.arraycopy(keys, 0, newKeys, 0, used);
+    keys = newKeys;
+    V[] newValues = (V[]) new Object[size];
+    System.arraycopy(values, 0, newValues, 0, used);
+    values = newValues;
+  }
+
+  private void insertArrays(int index, int hash, K key, V value) {
+    hashes[index] = hash;
+    keys[index] = key;
+    values[index] = value;
   }
 
   public CompactHashMap(Map<? extends K, ? extends V> source) {
@@ -86,8 +115,9 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     };
   }
 
-  private boolean isKey(CompactMapEntry<K, V> entry, int hash, Object key) {
-    return entry.key == key || (entry.hash == hash && entry.key.equals(key));
+  private boolean isKey(int i, int hash, Object key) {
+    K indexKey = keys[i];
+    return indexKey == key || (hashes[i] == hash && indexKey.equals(key));
   }
 
   private int[] lookup(Object key, int hashValue) {
@@ -104,8 +134,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
           freeSlot = i;
         }
       } else {
-        CompactMapEntry<K, V> entry = entries.get(index);
-        if (isKey(entry, hashValue, key)) {
+        if (isKey(index, hashValue, key)) {
           return new int[] {index, i};
         }
       }
@@ -172,11 +201,11 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     }
   }
 
-  private void resize(int n) {
+  private void resizeIndexMap(int n) {
     n = Integer.highestOneBit(n) * 2; // Round up to next power of two
     indexMap = makeIndex(n);
-    for (int index = 0; index < entries.size(); index++) {
-      int hash = entries.get(index).hash;
+    for (int index = 0; index < used; index++) {
+      int hash = hashes[index];
       IntIterator probes = genProbes(hash, n - 1);
       int i = probes.next();
       while (getIndex(i) != FREE) {
@@ -204,8 +233,8 @@ public class CompactHashMap<K, V> implements Map<K, V> {
 
   @Override
   public boolean containsValue(Object value) {
-    for (CompactMapEntry<K, V> e : entries) {
-      if (Objects.equals(value, e.val)) {
+    for (V v : values) {
+      if (Objects.equals(value, v)) {
         return true;
       }
     }
@@ -220,7 +249,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     if (index < 0) {
       return null;
     }
-    return entries.get(index).val;
+    return values[index];
   }
 
   Map.Entry<K, V> getEntry(Object key) {
@@ -230,7 +259,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     if (index < 0) {
       return null;
     }
-    return entries.get(index);
+    return new CompactMapEntry<>(this, index);
   }
 
   @Override
@@ -241,20 +270,21 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     int i = lookups[1];
     V old = null;
     if (index < 0) {
+      if (used == hashes.length) {
+        resizeArrays(used * 2);
+      }
+      insertArrays(used, hash, key, value);
       setIndex(i, used++);
-      CompactMapEntry<K, V> entry = new CompactMapEntry<>(hash, key, value);
-      entries.add(entry);
       if (index == FREE) {
         int localFilled = ++filled;
         if (localFilled * 3 > (indexMapSize) * 2) {
-          resize(4 * size());
+          resizeIndexMap(4 * size());
         }
       }
       ++version;
     } else {
-      CompactMapEntry<K, V> entry = entries.get(index);
-      old = entry.val;
-      entry.setValue(value);
+      old = values[index];
+      values[index] = value;
     }
 
     return old;
@@ -273,24 +303,26 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   }
 
   void removeAtIndex(int index) {
-    int hash = entries.get(index).hash;
+    int hash = hashes[index];
     int i = lookupForIndex(index, hash);
     removeInternal(i, index);
   }
 
   private V removeInternal(int i, int index) {
     setIndex(i, DUMMY);
-    int localUsed = --used;
-    int lastIndex = entries.size() - 1;
-    CompactMapEntry<K, V> lastEntry = entries.remove(lastIndex);
-    if (index != localUsed) {
-      int j = lookupForIndex(lastIndex, lastEntry.hash);
+    int lastIndex = --used;
+    V lastValue = values[lastIndex];
+    if (index != lastIndex) {
+      // TODO: Shrink arrays
+      int j = lookupForIndex(lastIndex, hashes[lastIndex]);
       assert lastIndex >= 0 && i != j;
       setIndex(j, index);
-      lastEntry = entries.set(index, lastEntry);
+      V valueToReturn = values[index];
+      insertArrays(index, hashes[lastIndex], keys[lastIndex], lastValue);
+      lastValue = valueToReturn;
     }
     ++version;
-    return lastEntry.val;
+    return lastValue;
   }
 
   @Override
@@ -303,7 +335,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public void clear() {
     indexMap = makeIndex(8);
-    entries.clear();
+    initArrays(8);
     used = 0;
     filled = 0;
   }
@@ -326,8 +358,8 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public int hashCode() {
     int ret = 0;
-    for (Entry<K, V> entry : entries) {
-      ret += entry.hashCode();
+    for (int i = 0; i < used; i++){
+      ret += Objects.hashCode(keys[i]) ^ Objects.hashCode(values[i]);
     }
     return ret;
   }

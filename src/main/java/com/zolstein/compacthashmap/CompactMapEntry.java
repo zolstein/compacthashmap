@@ -1,40 +1,40 @@
 package com.zolstein.compacthashmap;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.Objects;
 
 class CompactMapEntry<K, V> implements Map.Entry<K, V> {
 
-  int hash;
-  K key;
-  V val;
+  private K[] sourceKeys;
+  private V[] sourceValues;
+  private int index;
 
-  CompactMapEntry(int hash, K key, V val) {
-    this.hash = hash;
-    this.key = key;
-    this.val = val;
+  CompactMapEntry(CompactHashMap<K, V> source, int index) {
+    this.sourceKeys = source.keys;
+    this.sourceValues = source.values;
+    this.index = index;
   }
 
   @Override
   public K getKey() {
-    return key;
+    return sourceKeys[index];
   }
 
   @Override
   public V getValue() {
-    return val;
+    return sourceValues[index];
   }
-
   @Override
   public V setValue(V value) {
-    V ret = this.val;
-    this.val = value;
+    V ret = getValue();
+    sourceValues[index] = value;
     return ret;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(key) ^ Objects.hashCode(val);
+    return Objects.hashCode(getKey()) ^ Objects.hashCode(getValue());
   }
 
   @Override
@@ -45,6 +45,6 @@ class CompactMapEntry<K, V> implements Map.Entry<K, V> {
       return false;
     }
     Map.Entry<?, ?> other = (Map.Entry) o;
-    return Objects.equals(this.key, other.getKey()) && Objects.equals(this.val, other.getValue());
+    return Objects.equals(getKey(), other.getKey()) && Objects.equals(getValue(), other.getValue());
   }
 }

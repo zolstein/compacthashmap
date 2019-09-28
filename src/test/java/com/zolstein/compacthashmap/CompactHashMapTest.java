@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ public class CompactHashMapTest {
     checkOneElementCollection(map.keySet(), "key");
     checkOneElementCollection(map.values(), "value");
     checkOneElementCollection(
-        map.entrySet(), new CompactMapEntry<>("key".hashCode(), "key", "value"));
+        map.entrySet(), new SimpleMapEntry<>("key", "value"));
     // Replace element
     assertThat(map.put("key", "new_value")).isEqualTo("value");
     assertThat(map).isNotEmpty();
@@ -52,7 +53,7 @@ public class CompactHashMapTest {
     checkOneElementCollection(map.keySet(), "key");
     checkOneElementCollection(map.values(), "new_value");
     checkOneElementCollection(
-        map.entrySet(), new CompactMapEntry<>("key".hashCode(), "key", "new_value"));
+        map.entrySet(), new SimpleMapEntry<>("key", "new_value"));
     // Remove element
     assertThat(map.remove("key")).isEqualTo("new_value");
     assertThat(map).isEmpty();
@@ -424,6 +425,49 @@ public class CompactHashMapTest {
     @Override
     public int hashCode() {
       return 0;
+    }
+  }
+
+  private static class SimpleMapEntry<K, V> implements Map.Entry<K, V> {
+    private K key;
+    private V val;
+
+    private SimpleMapEntry(K key, V val) {
+      this.key = key;
+      this.val = val;
+    }
+
+    @Override
+    public K getKey() {
+      return key;
+    }
+
+    @Override
+    public V getValue() {
+      return val;
+    }
+
+    @Override
+    public V setValue(V newVal) {
+      V ret = val;
+      val = newVal;
+      return ret;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(key) ^ Objects.hashCode(val);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if (!(o instanceof Map.Entry)) {
+        return false;
+      }
+      Map.Entry<?, ?> other = (Map.Entry) o;
+      return Objects.equals(getKey(), other.getKey()) && Objects.equals(getValue(), other.getValue());
     }
   }
 }
