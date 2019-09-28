@@ -57,8 +57,9 @@ public class Benchmark {
 
   public void doIterate() {
     Iterator<Map.Entry<Long, String>> iterator = map.entrySet().iterator();
+    int i = 0;
     while (iterator.hasNext()) {
-      iterator.next();
+      i += iterator.next().hashCode();
     }
   }
 
