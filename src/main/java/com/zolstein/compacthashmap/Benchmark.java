@@ -1,5 +1,6 @@
 package com.zolstein.compacthashmap;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -21,16 +22,28 @@ public class Benchmark {
             long key = hasher.nextLong(); // Generates reasonable "hash" value
             map.put(key, i);
         }
-        while(true) {
+        long iters = 0;
+        long modify = 0;
+        long iterate = 0;
+        long lookup = 0;
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis() - start < 60000) {
             double r = random.nextDouble();
             if (r > 0.66) {
                 doModify();
+                modify++;
             } else if (r < .33) {
                 doIterate();
+                iterate++;
             } else {
                 doRandomLookup();
+                lookup++;
             }
+            ++iters;
         }
+        System.out.println(
+                String.format("%d iterations completed\n%d lookup\n%d iterate\n%d modify\n",
+                        iters, lookup, iterate, modify));
     }
 
     public void doRandomLookup() {
@@ -44,7 +57,7 @@ public class Benchmark {
 
     public void doIterate() {
         Iterator<Map.Entry<Long, Integer>> iterator = map.entrySet().iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             iterator.next();
         }
     }
