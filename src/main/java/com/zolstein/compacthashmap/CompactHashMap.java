@@ -73,6 +73,18 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     values[index] = value;
   }
 
+  private int hash(int index) {
+    return hashes[index];
+  }
+
+  private K key(int index) {
+    return keys[index];
+  }
+
+  private V value(int index) {
+    return values[index];
+  }
+
   public CompactHashMap(Map<? extends K, ? extends V> source) {
     this();
     putAll(source);
@@ -116,8 +128,8 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   }
 
   private boolean isKey(int i, int hash, Object key) {
-    K indexKey = keys[i];
-    return indexKey == key || (hashes[i] == hash && indexKey.equals(key));
+    K indexKey = key(i);
+    return indexKey == key || (hash(i) == hash && indexKey.equals(key));
   }
 
   private int[] lookup(Object key, int hashValue) {
@@ -205,7 +217,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     n = Integer.highestOneBit(n) * 2; // Round up to next power of two
     indexMap = makeIndex(n);
     for (int index = 0; index < used; index++) {
-      int hash = hashes[index];
+      int hash = hash(index);
       IntIterator probes = genProbes(hash, n - 1);
       int i = probes.next();
       while (getIndex(i) != FREE) {
@@ -249,7 +261,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     if (index < 0) {
       return null;
     }
-    return values[index];
+    return value(index);
   }
 
   Map.Entry<K, V> getEntry(Object key) {
@@ -283,7 +295,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
       }
       ++version;
     } else {
-      old = values[index];
+      old = value(index);
       values[index] = value;
     }
 
@@ -303,7 +315,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   }
 
   void removeAtIndex(int index) {
-    int hash = hashes[index];
+    int hash = hash(index);
     int i = lookupForIndex(index, hash);
     removeInternal(i, index);
   }
@@ -311,14 +323,14 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   private V removeInternal(int i, int index) {
     setIndex(i, DUMMY);
     int lastIndex = --used;
-    V lastValue = values[lastIndex];
+    V lastValue = value(lastIndex);
     if (index != lastIndex) {
       // TODO: Shrink arrays
-      int j = lookupForIndex(lastIndex, hashes[lastIndex]);
+      int j = lookupForIndex(lastIndex, hash(lastIndex));
       assert lastIndex >= 0 && i != j;
       setIndex(j, index);
-      V valueToReturn = values[index];
-      insertArrays(index, hashes[lastIndex], keys[lastIndex], lastValue);
+      V valueToReturn = value(index);
+      insertArrays(index, hash(lastIndex), key(lastIndex), lastValue);
       lastValue = valueToReturn;
     }
     ++version;
@@ -359,7 +371,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   public int hashCode() {
     int ret = 0;
     for (int i = 0; i < used; i++){
-      ret += Objects.hashCode(keys[i]) ^ Objects.hashCode(values[i]);
+      ret += Objects.hashCode(key(i)) ^ Objects.hashCode(value(i));
     }
     return ret;
   }
