@@ -11,7 +11,7 @@ public class Benchmark {
 
   private static final int sizeLimit = 100000;
 
-  private Map<Long, Integer> map = new CompactHashMap<>();
+  private Map<Long, String> map = new CompactHashMap<>();
   private Random random = new Random(0x8765432101234567L);
   private Random hasher = new Random();
 
@@ -19,7 +19,7 @@ public class Benchmark {
     for (int i = 0; i < sizeLimit / 2; i++) {
       hasher.setSeed(i);
       long key = hasher.nextLong(); // Generates reasonable "hash" value
-      map.put(key, i);
+      map.put(key, "");
     }
     long iters = 0;
     long modify = 0;
@@ -56,7 +56,7 @@ public class Benchmark {
   }
 
   public void doIterate() {
-    Iterator<Map.Entry<Long, Integer>> iterator = map.entrySet().iterator();
+    Iterator<Map.Entry<Long, String>> iterator = map.entrySet().iterator();
     while (iterator.hasNext()) {
       iterator.next();
     }
@@ -70,7 +70,7 @@ public class Benchmark {
       if (map.containsKey(key)) {
         map.remove(key);
       } else {
-        map.put(key, value);
+        map.put(key, "");
       }
     }
   }
