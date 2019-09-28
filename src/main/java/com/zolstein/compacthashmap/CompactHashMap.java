@@ -48,8 +48,13 @@ public class CompactHashMap<K, V> implements Map<K, V> {
         putAll(source);
     }
 
-    private static Iterator<Integer> genProbes(int hashValue, int mask) {
-        return new Iterator<Integer>() {
+    private interface IntIterator {
+        boolean hasNext();
+        int next();
+    }
+
+    private static IntIterator genProbes(int hashValue, int mask) {
+        return new IntIterator() {
             boolean hasRun = false;
             int i;
             int perturb;
@@ -60,7 +65,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
             }
 
             @Override
-            public Integer next() {
+            public int next() {
                 if (!hasRun) {
                     int hash = hashValue;
                     if (hash < 0) {
@@ -83,7 +88,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
         int indexLength = indexMapSize;
         assert filled < indexLength;
         int freeSlot = FREE;
-        Iterator<Integer> probes = genProbes(hashValue, indexLength - 1);
+        IntIterator probes = genProbes(hashValue, indexLength - 1);
         for (int i = probes.next(); ; i = probes.next()) {
             int index = getIndex(i);
             if (index == FREE) {
@@ -104,7 +109,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     private int lookupForIndex(int desiredIndex, int hashValue) {
         int indexLength = indexMapSize;
         assert filled < indexLength;
-        Iterator<Integer> probes = genProbes(hashValue, indexLength - 1);
+        IntIterator probes = genProbes(hashValue, indexLength - 1);
         for (int i = probes.next(); ; i = probes.next()) {
             int index = getIndex(i);
             if (index == desiredIndex) {
@@ -166,7 +171,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
         indexMap = makeIndex(n);
         for (int index = 0; index < entries.size(); index++) {
             int hash = entries.get(index).hash;
-            Iterator<Integer> probes = genProbes(hash, n - 1);
+            IntIterator probes = genProbes(hash, n - 1);
             int i = probes.next();
             while (getIndex(i) != FREE) {
                 i = probes.next();
