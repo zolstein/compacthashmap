@@ -86,6 +86,10 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     };
   }
 
+  private boolean isKey(CompactMapEntry<K, V> entry, int hash, Object key) {
+    return entry.key == key || (entry.hash == hash && entry.key.equals(key));
+  }
+
   private int[] lookup(Object key, int hashValue) {
     int indexLength = indexMapSize;
     assert filled < indexLength;
@@ -101,7 +105,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
         }
       } else {
         CompactMapEntry<K, V> entry = entries.get(index);
-        if (entry.key == key || (entry.hash == hashValue && entry.key.equals(key))) {
+        if (isKey(entry, hashValue, key)) {
           return new int[] {index, i};
         }
       }
