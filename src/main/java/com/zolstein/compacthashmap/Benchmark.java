@@ -12,7 +12,7 @@ public class Benchmark {
   private static final int sizeLimit = 100000;
 
   private Map<Long, String> map = new CompactHashMap<>();
-  private Random random = new Random(0x8765432101234567L);
+  private Random random = new Random();
   private Random hasher = new Random();
 
   public void run() {
@@ -25,19 +25,26 @@ public class Benchmark {
     long modify = 0;
     long iterate = 0;
     long lookup = 0;
-    long start = System.currentTimeMillis();
-    while (System.currentTimeMillis() - start < 60000) {
-      double r = random.nextDouble();
-      if (r > 0.66) {
-        doModify();
-        modify++;
-      } else if (r < .33) {
-        doIterate();
-        iterate++;
-      } else {
-        doRandomLookup();
-        lookup++;
-      }
+    long start;
+    random.setSeed(0x8765432101234567L);
+    start = System.currentTimeMillis();
+    while (System.currentTimeMillis() - start < 30000) {
+      doIterate();
+      ++iterate;
+      ++iters;
+    }
+    random.setSeed(0xDEADBEEFDEADBEEFL);
+    start = System.currentTimeMillis();
+    while (System.currentTimeMillis() - start < 30000) {
+      doRandomLookup();
+      ++lookup;
+      ++iters;
+    }
+    random.setSeed(0xFEDCBA0987654321L);
+    start = System.currentTimeMillis();
+    while (System.currentTimeMillis() - start < 30000) {
+      doModify();
+      ++modify;
       ++iters;
     }
     System.out.println(
