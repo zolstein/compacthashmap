@@ -75,7 +75,7 @@ public class Benchmark {
       int value = random.nextInt(sizeLimit);
       hasher.setSeed(value);
       long key = hasher.nextLong(); // Generates reasonable "hash" value
-      if (map.containsKey(key)) {
+      if (random.nextBoolean()) {
         map.remove(key);
       } else {
         map.put(key, "");
