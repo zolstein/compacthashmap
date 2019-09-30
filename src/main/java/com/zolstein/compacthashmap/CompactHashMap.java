@@ -222,7 +222,12 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   }
 
   private void resizeIndexMap(int n) {
-    n = Integer.highestOneBit(n) * 2; // Round up to next power of two
+    // Round up to next power of two
+    // n - 1 fixes exact powers of two getting doubled
+    // n | 1 fixes previous fix in case of exactly 1
+    n = (n - 1);
+    n = n | 1;
+    n = Integer.highestOneBit(n) << 1;
     indexMap = makeIndex(n);
     for (int index = 0; index < used; index++) {
       int hash = hash(index);
