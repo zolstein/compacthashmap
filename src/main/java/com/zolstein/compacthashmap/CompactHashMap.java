@@ -127,9 +127,17 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     };
   }
 
+  private boolean isKey(Object indexKey, Object key) {
+    return indexKey == key;
+  }
+
+  private boolean isHash(int indexHash, int hash) {
+    return indexHash == hash;
+  }
+
   private boolean isKey(int i, int hash, Object key) {
     K indexKey = key(i);
-    return indexKey == key || (hash(i) == hash && indexKey.equals(key));
+    return isKey(indexKey, key)|| (isHash(hash(i), hash) && Objects.equals(indexKey, key));
   }
 
   private int[] lookup(Object key, int hashValue) {
