@@ -383,6 +383,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public int hashCode() {
     int ret = 0;
+    int used = this.used;
     for (int i = 0; i < used; i++){
       ret += Objects.hashCode(key(i)) ^ Objects.hashCode(value(i));
     }
