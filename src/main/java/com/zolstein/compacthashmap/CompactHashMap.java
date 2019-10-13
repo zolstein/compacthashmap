@@ -140,6 +140,18 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     return isKey(indexKey, key)|| (isHash(hash(i), hash) && Objects.equals(indexKey, key));
   }
 
+  private int[] constructLookupReturn(int index, int slot) {
+    return new int[] { index, slot };
+  }
+
+  private int index(int[] lookupReturn) {
+    return lookupReturn[0];
+  }
+
+  private int slot(int[] lookupReturn) {
+    return lookupReturn[1];
+  }
+
   private int[] lookup(Object key, int hashValue) {
     int indexLength = indexMapSize;
     assert filled < indexLength;
@@ -148,14 +160,14 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     for (int i = probes.next(); ; i = probes.next()) {
       int index = getIndex(i);
       if (index == FREE) {
-        return freeSlot == FREE ? new int[] {FREE, i} : new int[] {DUMMY, freeSlot};
+        return freeSlot == FREE ? constructLookupReturn(FREE, i) : constructLookupReturn(DUMMY, freeSlot);
       } else if (index == DUMMY) {
         if (freeSlot == FREE) {
           freeSlot = i;
         }
       } else {
         if (isKey(index, hashValue, key)) {
-          return new int[] {index, i};
+          return constructLookupReturn(index, i);
         }
       }
     }
@@ -253,7 +265,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
 
   @Override
   public boolean containsKey(Object key) {
-    return lookup(key, key.hashCode())[0] >= 0;
+    return index(lookup(key, key.hashCode())) >= 0;
   }
 
   @Override
@@ -270,7 +282,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   public V get(Object key) {
     int hash = key.hashCode();
     int[] lookups = lookup(key, hash);
-    int index = lookups[0];
+    int index = index(lookups);
     if (index < 0) {
       return null;
     }
@@ -280,7 +292,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   Map.Entry<K, V> getEntry(Object key) {
     int hash = key.hashCode();
     int[] lookups = lookup(key, hash);
-    int index = lookups[0];
+    int index = index(lookups);
     if (index < 0) {
       return null;
     }
@@ -291,8 +303,8 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   public V put(K key, V value) {
     int hash = key.hashCode();
     int[] lookups = lookup(key, hash);
-    int index = lookups[0];
-    int i = lookups[1];
+    int index = index(lookups);
+    int i = slot(lookups);
     V old = null;
     if (index < 0) {
       if (used == hashes.length) {
@@ -319,8 +331,8 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   public V remove(Object key) {
     int hash = key.hashCode();
     int[] lookups = lookup(key, hash);
-    int index = lookups[0];
-    int i = lookups[1];
+    int index = index(lookups);
+    int i = slot(lookups);
     if (index < 0) {
       return null;
     }
