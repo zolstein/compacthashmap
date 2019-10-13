@@ -140,19 +140,22 @@ public class CompactHashMap<K, V> implements Map<K, V> {
     return isKey(indexKey, key)|| (isHash(hash(i), hash) && Objects.equals(indexKey, key));
   }
 
-  private int[] constructLookupReturn(int index, int slot) {
-    return new int[] { index, slot };
+  private long constructLookupReturn(int index, int slot) {
+    long ret = index;
+    ret = ret << 32;
+    ret = ret | slot;
+    return ret;
   }
 
-  private int index(int[] lookupReturn) {
-    return lookupReturn[0];
+  private int index(long lookupReturn) {
+    return (int) (lookupReturn >> 32);
   }
 
-  private int slot(int[] lookupReturn) {
-    return lookupReturn[1];
+  private int slot(long lookupReturn) {
+    return (int) lookupReturn;
   }
 
-  private int[] lookup(Object key, int hashValue) {
+  private long lookup(Object key, int hashValue) {
     int indexLength = indexMapSize;
     assert filled < indexLength;
     int freeSlot = FREE;
@@ -281,7 +284,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public V get(Object key) {
     int hash = key.hashCode();
-    int[] lookups = lookup(key, hash);
+    long lookups = lookup(key, hash);
     int index = index(lookups);
     if (index < 0) {
       return null;
@@ -291,7 +294,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
 
   Map.Entry<K, V> getEntry(Object key) {
     int hash = key.hashCode();
-    int[] lookups = lookup(key, hash);
+    long lookups = lookup(key, hash);
     int index = index(lookups);
     if (index < 0) {
       return null;
@@ -302,7 +305,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public V put(K key, V value) {
     int hash = key.hashCode();
-    int[] lookups = lookup(key, hash);
+    long lookups = lookup(key, hash);
     int index = index(lookups);
     int i = slot(lookups);
     V old = null;
@@ -330,7 +333,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
   @Override
   public V remove(Object key) {
     int hash = key.hashCode();
-    int[] lookups = lookup(key, hash);
+    long lookups = lookup(key, hash);
     int index = index(lookups);
     int i = slot(lookups);
     if (index < 0) {
