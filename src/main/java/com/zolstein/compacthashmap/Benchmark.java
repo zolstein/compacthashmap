@@ -1,5 +1,6 @@
 package com.zolstein.compacthashmap;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -9,7 +10,7 @@ public class Benchmark {
     new Benchmark().run();
   }
 
-  private static final int sizeLimit = 100000;
+  private static final int sizeLimit = 10;
 
   private Map<Long, String> map = new CompactHashMap<>();
   private Random random = new Random();
@@ -54,7 +55,7 @@ public class Benchmark {
   }
 
   public void doRandomLookup() {
-    for (int i = 0; i < map.size(); i++) {
+    for (int i = 0; i < 50000; i++) {
       int value = random.nextInt(sizeLimit);
       hasher.setSeed(value);
       long key = hasher.nextLong(); // Generates reasonable "hash" value
@@ -71,7 +72,7 @@ public class Benchmark {
   }
 
   public void doModify() {
-    for (int i = 0; i < map.size() / 10; i++) {
+    for (int i = 0; i < 5000; i++) {
       int value = random.nextInt(sizeLimit);
       hasher.setSeed(value);
       long key = hasher.nextLong(); // Generates reasonable "hash" value
