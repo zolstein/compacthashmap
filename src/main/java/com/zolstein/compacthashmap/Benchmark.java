@@ -14,7 +14,7 @@ public class Benchmark {
 
   private Map<Long, String> map = new CompactHashMap<>();
   private Random random = new Random();
-  private Random hasher = new Random();
+  private long[] lookupKeys;
 
   public Benchmark(String[] args) {
     for (String arg : args) {
@@ -42,10 +42,19 @@ public class Benchmark {
     System.out.printf("Testing %s; size: %d\n", map.getClass().getSimpleName(), sizeLimit);
   }
 
+  public void setup() {
+    long[] keys = new long[sizeLimit];
+    for (int i = 0; i < sizeLimit; i++) {
+      random.setSeed(i);
+      keys[i] = random.nextLong(); // Generates reasonable "hash" value
+    }
+    lookupKeys = keys;
+  }
+
   public void run() {
+    setup();
     for (int i = 0; i < sizeLimit / 2; i++) {
-      hasher.setSeed(i);
-      long key = hasher.nextLong(); // Generates reasonable "hash" value
+      long key = lookupKeys[i];
       map.put(key, "");
     }
     long iters = 0;
@@ -83,8 +92,7 @@ public class Benchmark {
   public void doRandomLookup() {
     for (int i = 0; i < 50000; i++) {
       int value = random.nextInt(sizeLimit);
-      hasher.setSeed(value);
-      long key = hasher.nextLong(); // Generates reasonable "hash" value
+      long key = lookupKeys[value];
       map.get(key);
     }
   }
@@ -104,8 +112,7 @@ public class Benchmark {
   public void doModify() {
     for (int i = 0; i < 50000; i++) {
       int value = random.nextInt(sizeLimit);
-      hasher.setSeed(value);
-      long key = hasher.nextLong(); // Generates reasonable "hash" value
+      long key = lookupKeys[value];
       if (random.nextBoolean()) {
         map.remove(key);
       } else {
