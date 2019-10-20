@@ -39,7 +39,6 @@ public class Benchmark {
       }
     }
     System.out.printf("Testing %s; size: %d\n", map.getClass().getSimpleName(), sizeLimit);
-    System.out.printf("Testing %s; size: %d\n", map.getClass().getSimpleName(), sizeLimit);
   }
 
   public void setup() {

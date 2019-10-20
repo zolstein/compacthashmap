@@ -318,7 +318,7 @@ public class CompactHashMap<K, V> implements Map<K, V> {
       if (index == FREE) {
         int localFilled = ++filled;
         if (localFilled * 3 > (indexMapSize) * 2) {
-          resizeIndexMap(4 * size());
+          resizeIndexMap(2 * size());
         }
       }
       ++version;
