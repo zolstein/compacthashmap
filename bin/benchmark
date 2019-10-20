@@ -1,0 +1,4 @@
+#!/bin/bash
+
+HASH=$(git log --pretty=format:"%h" HEAD^..HEAD)
+java $vm1 $vm2 -jar target/compact-hash-map-1.0-SNAPSHOT.jar $@ | tee -a "$HASH".bench

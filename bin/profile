@@ -1,0 +1,21 @@
+#!/bin/bash
+
+vm1="-XX:+UnlockDiagnosticVMOptions"
+vm2="-XX:+DebugNonSafepoints"
+
+java $vm1 $vm2 -jar target/compact-hash-map-1.0-SNAPSHOT.jar &
+pid=$(jps | grep jar | cut -d' ' -f 1);
+# echo "$@"
+
+HASH=$(git log --pretty=format:"%h" HEAD^..HEAD)
+if [ -z $1 ]
+then
+  OUT_FILE="$HASH".svg
+else
+  OUT_FILE=$1-"$HASH".svg
+fi
+
+echo $OUT_FILE
+
+async-profiler -d 100 -i 500us -f $OUT_FILE $pid
+

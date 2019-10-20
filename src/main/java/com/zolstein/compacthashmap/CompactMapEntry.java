@@ -1,6 +1,5 @@
 package com.zolstein.compacthashmap;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.Objects;
 
