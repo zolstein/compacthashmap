@@ -17,7 +17,7 @@ public class Benchmark {
   private Random hasher = new Random();
 
   public Benchmark(String[] args) {
-    for (String arg: args) {
+    for (String arg : args) {
       if (arg.equals("hashmap")) {
         // Compare against built-in hashmap
         map = new HashMap<>();
@@ -60,6 +60,7 @@ public class Benchmark {
       ++iterate;
       ++iters;
     }
+    System.out.printf("%d iterate\n", iterate);
     random.setSeed(0xDEADBEEFDEADBEEFL);
     start = System.currentTimeMillis();
     while (System.currentTimeMillis() - start < 30000) {
@@ -67,6 +68,7 @@ public class Benchmark {
       ++lookup;
       ++iters;
     }
+    System.out.printf("%d lookup\n", lookup);
     random.setSeed(0xFEDCBA0987654321L);
     start = System.currentTimeMillis();
     while (System.currentTimeMillis() - start < 30000) {
@@ -74,10 +76,8 @@ public class Benchmark {
       ++modify;
       ++iters;
     }
-    System.out.println(
-        String.format(
-            "%d iterations completed\n%d lookup\n%d iterate\n%d modify\n",
-            iters, lookup, iterate, modify));
+    System.out.printf("%d modify\n", modify);
+    System.out.printf("%d iterations completed\n", iters);
   }
 
   public void doRandomLookup() {
